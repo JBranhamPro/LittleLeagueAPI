@@ -30,20 +30,22 @@ class GamesTable(object):
 	def getActive(self):
 		self.c.execute("SELECT * FROM games WHERE active=1")
 		records = self.c.fetchall()
-		games = []
+		# games = []
 
-		for record in records:
-			game = self.convertToDict(record)
-			games.append(game)
+		# for record in records:
+		# 	game = self.convertToDict(record)
+		# 	games.append(game)
 
-		games = {"activeGames":games}
+		# games = { "activeGames" : games }
 
-		try:
-			logging.debug(f"GamesTable.getActive() returned the following records: {records}")
-			return games
-		except:
-			logging.error(f"GamesTable.getActive() returned no records.")
-			return None
+		# try:
+		# 	logging.debug(f"GamesTable.getActive() returned the following records: {records}")
+		# 	return games
+		# except:
+		# 	logging.error(f"GamesTable.getActive() returned no records.")
+		# 	return None
+		logging.debug(f"GamesTable.getActive() returned the following records: {records}")
+		return records
 
 	def getById(self, ID):
 		self.c.execute("SELECT * FROM games WHERE id=:ID", {"ID":ID})
@@ -70,17 +72,16 @@ class GamesTable(object):
 	def insert(self, record):
 		r = record
 
-		# The "id" field is created in the insert method to ensure that no ID is duplicated... EVER. We NEVER want the user to be capable of determing ID's.
-		# Other "null" fields are handled on the client side because we want to ensure that bad fields never make it to the table.
-		ID = self.newId()
-		r["ID"] = ID
-		logging.debug(f"GamesTable.insert({record}) with r = type:{type(r)}")
+		try:
+			existingRecord = self.getById(r["ID"])
+			if existingRecord:
+				logging.warning(f"GamesTable.insert({r}) --> A record with id: {r ['ID']} already exists. Insert aborted.")
+				return
+		except:
+			# The "id" field is created in the insert method to ensure that no ID is duplicated... EVER. We NEVER want the user to be capable of determing ID's.
+			# Other "null" fields are handled on the client side because we want to ensure that bad fields never make it to the table.
+			r["ID"] = self.newId()
 		
-		existingRecord = self.getById(r["ID"])
-		if existingRecord:
-			logging.warning(f"GamesTable.insert({r}) --> A record with id: {r ['ID']} already exists. Insert aborted.")
-			return
-
 		with self.conn:
 			self.c.execute("INSERT INTO games VALUES (:id, :name, :startTime, :active, :teamA, :teamB, :draftType, :randomChamps, :randomLanes)",
 				{"id":r["ID"], "name":r["name"], "active":r["active"], "startTime":r["startTime"], "teamA":r["teamA"], "teamB":r["teamB"], "draftType":r["draftType"], "randomChamps":r["randomChamps"], "randomLanes":r["randomLanes"]})

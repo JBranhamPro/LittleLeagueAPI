@@ -2,6 +2,7 @@ import sqlite3
 import logging
 from .SummonersTable import SummonersTable
 from .GamesTable import GamesTable
+from .TeamsTable import TeamsTable
 
 # conn = sqlite3.connect('LittleLeague.db')
 conn = sqlite3.connect(':memory:', check_same_thread=False)
@@ -13,3 +14,4 @@ Teams = TeamsTable(conn, cursor)
 
 Summoners.create()
 Games.create()
+Teams.create()
